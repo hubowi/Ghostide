@@ -1,54 +1,30 @@
-# 使用官方Ubuntu镜像
 FROM ubuntu:22.04
 
-# 设置非交互式环境
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+    ANDROID_HOME=/opt/android-sdk \
+    JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 
-# 安装基础工具和Java
+ENV PATH=${PATH}:${JAVA_HOME}/bin:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools
+
+# 安装最小依赖集
 RUN apt-get update && apt-get install -y \
-    wget \
     curl \
-    git \
     unzip \
-    zip \
-    openjdk-17-jdk \
-    openjdk-17-jre \
+    openjdk-17-jdk-headless \
     && rm -rf /var/lib/apt/lists/*
 
-# 创建vscode用户
-RUN useradd -m -s /bin/bash vscode && \
-    usermod -aG sudo vscode && \
-    echo "vscode ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-
-# 切换到vscode用户
-USER vscode
-WORKDIR /home/vscode
-
-# 设置环境变量
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-ENV PATH="$JAVA_HOME/bin:$PATH"
-ENV ANDROID_HOME=/home/vscode/android-sdk
-ENV PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
-
 # 安装Android SDK
-RUN mkdir -p $ANDROID_HOME && cd $ANDROID_HOME && \
-    wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip && \
-    unzip -q cmdline-tools.zip && \
-    mkdir -p cmdline-tools/latest && \
-    mv cmdline-tools/* cmdline-tools/latest/ && \
-    rm cmdline-tools.zip
+RUN mkdir -p ${ANDROID_HOME}/cmdline-tools && \
+    curl -sSL https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -o /tmp/cmdline-tools.zip && \
+    unzip -q /tmp/cmdline-tools.zip -d ${ANDROID_HOME}/cmdline-tools && \
+    mv ${ANDROID_HOME}/cmdline-tools/cmdline-tools ${ANDROID_HOME}/cmdline-tools/latest && \
+    rm /tmp/cmdline-tools.zip
 
-# 安装Gradle
-ARG GRADLE_VERSION=8.5
-RUN wget -q https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -O gradle.zip && \
-    unzip -d /home/vscode gradle.zip && \
-    rm gradle.zip && \
-    mv /home/vscode/gradle-${GRADLE_VERSION} /home/vscode/gradle
-ENV PATH="/home/vscode/gradle/bin:$PATH"
-
-# 创建必要的目录
-RUN mkdir -p /home/vscode/.android && \
-    touch /home/vscode/.android/repositories.cfg && \
-    mkdir -p /home/vscode/.gradle
+# 接受许可并安装必要组件
+RUN yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1
+RUN ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager \
+    "platform-tools" \
+    "build-tools;34.0.0" \
+    "platforms;android-34"
 
 WORKDIR /workspace
