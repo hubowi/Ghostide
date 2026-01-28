@@ -1,0 +1,25 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {
+    "ghcr.io/devcontainers/features/android-sdk:1": {
+      "versions": "latest",
+      "ndk": "latest",
+      "cmdline_tools_version": "latest",
+      "build_tools": "34.0.0",
+      "platforms": "android-34",
+      "emulator": false
+    },
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "19"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "redhat.java",
+        "vscjava.vscode-java-debug",
+        "vscjava.vscode-gradle"
+      ]
+    }
+  }
+}
