@@ -1,18 +1,7 @@
 {
-  "image": "mcr.microsoft.com/devcontainers/android:1",
-  "features": {
-    "ghcr.io/devcontainers/features/java:1": {
-      "version": "17"
-    }
+  "containerEnv": {
+    "JAVA_HOME": "/usr/lib/jvm/java-17-openjdk-amd64",
+    "PATH": "${containerEnv:PATH}:${containerEnv:JAVA_HOME}/bin"
   },
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "vscjava.vscode-java-pack",
-        "vscjava.vscode-gradle",
-        "redhat.vscode-xml"
-      ]
-    }
-  },
-  "postCreateCommand": "echo 'Android 开发环境已就绪！'"
+  "postCreateCommand": "chmod +x gradlew && export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64"
 }
