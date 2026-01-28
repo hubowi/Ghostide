@@ -1,62 +1,54 @@
-FROM mcr.microsoft.com/devcontainers/base:ubuntu-22.04
+# 使用官方Ubuntu镜像
+FROM ubuntu:22.04
 
-ARG ANDROID_SDK_VERSION=9477386
-ARG ANDROID_PLATFORM=android-34
-ARG NDK_VERSION=25.2.9519653
-ARG JAVA_VERSION=17
-ARG GRADLE_VERSION=8.5
+# 设置非交互式环境
+ENV DEBIAN_FRONTEND=noninteractive
 
-# 设置环境变量
-ENV ANDROID_HOME=/opt/android-sdk \
-    ANDROID_SDK_ROOT=/opt/android-sdk \
-    JAVA_HOME=/usr/lib/jvm/java-${JAVA_VERSION}-openjdk-amd64 \
-    GRADLE_USER_HOME=/workspaces/.gradle \
-    PATH=${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/tools/bin:${JAVA_HOME}/bin
-
-# 安装基础工具
+# 安装基础工具和Java
 RUN apt-get update && apt-get install -y \
     wget \
     curl \
     git \
     unzip \
     zip \
-    make \
-    gcc \
-    g++ \
-    libgl1-mesa-glx \
-    libglu1-mesa \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libxi6 \
-    openjdk-${JAVA_VERSION}-jdk \
-    openjdk-${JAVA_VERSION}-jre \
+    openjdk-17-jdk \
+    openjdk-17-jre \
     && rm -rf /var/lib/apt/lists/*
 
-# 安装 Gradle
-RUN wget -q https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -O gradle.zip \
-    && unzip -d /opt gradle.zip \
-    && mv /opt/gradle-${GRADLE_VERSION} /opt/gradle \
-    && rm gradle.zip \
-    && ln -s /opt/gradle/bin/gradle /usr/local/bin/gradle
+# 创建vscode用户
+RUN useradd -m -s /bin/bash vscode && \
+    usermod -aG sudo vscode && \
+    echo "vscode ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# 安装 Android SDK
-RUN mkdir -p ${ANDROID_HOME}/cmdline-tools \
-    && wget -q https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_VERSION}_latest.zip -O cmdline-tools.zip \
-    && unzip -q cmdline-tools.zip -d ${ANDROID_HOME}/cmdline-tools \
-    && mv ${ANDROID_HOME}/cmdline-tools/cmdline-tools ${ANDROID_HOME}/cmdline-tools/latest \
-    && rm cmdline-tools.zip
-
-# 接受 Android 许可证
-RUN yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses
-
-# 设置权限
-RUN chmod -R 755 ${ANDROID_HOME} \
-    && chown -R vscode:vscode ${ANDROID_HOME}
-
-# 切换到非root用户
+# 切换到vscode用户
 USER vscode
+WORKDIR /home/vscode
 
-# 验证安装
-RUN echo "Java version:" && java -version \
-    && echo "Gradle version:" && gradle --version
+# 设置环境变量
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV PATH="$JAVA_HOME/bin:$PATH"
+ENV ANDROID_HOME=/home/vscode/android-sdk
+ENV PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+
+# 安装Android SDK
+RUN mkdir -p $ANDROID_HOME && cd $ANDROID_HOME && \
+    wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip && \
+    unzip -q cmdline-tools.zip && \
+    mkdir -p cmdline-tools/latest && \
+    mv cmdline-tools/* cmdline-tools/latest/ && \
+    rm cmdline-tools.zip
+
+# 安装Gradle
+ARG GRADLE_VERSION=8.5
+RUN wget -q https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -O gradle.zip && \
+    unzip -d /home/vscode gradle.zip && \
+    rm gradle.zip && \
+    mv /home/vscode/gradle-${GRADLE_VERSION} /home/vscode/gradle
+ENV PATH="/home/vscode/gradle/bin:$PATH"
+
+# 创建必要的目录
+RUN mkdir -p /home/vscode/.android && \
+    touch /home/vscode/.android/repositories.cfg && \
+    mkdir -p /home/vscode/.gradle
+
+WORKDIR /workspace
