@@ -1,0 +1,55 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17",
+      "installGradle": false
+    }
+  },
+
+  "postCreateCommand": [
+    "echo '=== 安装 Android SDK ==='",
+    "# 安装必要工具",
+    "sudo apt-get update && sudo apt-get install -y wget unzip",
+    "# 创建目录",
+    "mkdir -p ~/android-sdk/cmdline-tools",
+    "cd ~/android-sdk/cmdline-tools",
+    "# 下载 SDK",
+    "wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip",
+    "unzip -q commandlinetools-linux-9477386_latest.zip",
+    "mv cmdline-tools latest",
+    "rm commandlinetools-linux-9477386_latest.zip",
+    "# 设置环境变量",
+    "echo 'export ANDROID_HOME=$HOME/android-sdk' >> ~/.bashrc",
+    "echo 'export ANDROID_SDK_ROOT=$HOME/android-sdk' >> ~/.bashrc",
+    "echo 'export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin' >> ~/.bashrc",
+    "source ~/.bashrc",
+    "# 接受许可证",
+    "echo '正在接受许可证...'",
+    "yes | sdkmanager --licenses > /dev/null 2>&1",
+    "# 安装组件",
+    "sdkmanager --update",
+    "sdkmanager 'platform-tools' 'build-tools;34.0.0' 'platforms;android-34'",
+    "# 验证",
+    "echo '安装完成！验证:'",
+    "adb version",
+    "# 项目准备",
+    "cd /workspaces/$(basename $GITHUB_REPOSITORY)",
+    "chmod +x ./gradlew 2>/dev/null || true",
+    "echo '✅ 环境就绪，可以构建 APK 了！'"
+  ].join(" && "),
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "vscjava.vscode-gradle"
+      ]
+    }
+  },
+
+  "remoteEnv": {
+    "ANDROID_HOME": "/home/vscode/android-sdk",
+    "ANDROID_SDK_ROOT": "/home/vscode/android-sdk"
+  }
+}
