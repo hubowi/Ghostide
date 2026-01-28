@@ -1,11 +1,18 @@
 {
   "image": "mcr.microsoft.com/devcontainers/android:1",
-  "features": {},
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17"
+    }
+  },
   "customizations": {
     "vscode": {
       "extensions": [
-        "vscjava.vscode-android-pack"
+        "vscjava.vscode-java-pack",
+        "vscjava.vscode-gradle",
+        "redhat.vscode-xml"
       ]
     }
-  }
+  },
+  "postCreateCommand": "echo 'Android 开发环境已就绪！'"
 }
