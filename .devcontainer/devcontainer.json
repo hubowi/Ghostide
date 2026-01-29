@@ -1,4 +1,45 @@
 {
-  "image": "mcr.microsoft.com/devcontainers/base:debian",
-  "features": {}
+	"name": "Android APK Build (Minimal)",
+	"image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+
+	"features": {
+		"ghcr.io/devcontainers/features/android-sdk:1": {
+			"version": "latest",
+			"platforms": "platforms;android-34",
+			"buildTools": "build-tools;34.0.0",
+			"cmake": "3.22.1",
+			"ndk": "25.1.8937393",
+			"emulator": false,
+			"acceptLicenses": true
+		},
+		"ghcr.io/devcontainers/features/java:1": {
+			"version": "17",
+			"installGradle": true
+		}
+	},
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"redhat.java",
+				"vscjava.vscode-java-pack",
+				"vscjava.vscode-gradle"
+			]
+		}
+	},
+
+	"postCreateCommand": "echo 'Minimal Android build environment ready' && java -version && adb --version",
+
+	"forwardPorts": [5037],
+
+	"remoteUser": "vscode",
+
+	"containerEnv": {
+		"ANDROID_SDK_ROOT": "/home/vscode/android-sdk",
+		"ANDROID_HOME": "/home/vscode/android-sdk",
+		"JAVA_HOME": "/usr/lib/jvm/java-17-openjdk-amd64",
+		"GRADLE_USER_HOME": "/home/vscode/.gradle"
+	},
+
+	"workspaceFolder": "/workspace"
 }
